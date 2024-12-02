@@ -33,6 +33,6 @@ jobs:
         working-directory: ${{ github.workspace }}/StickerSmash
         run: npm install
 
-      - name: Run Expo build
+      - name: Run Tests
         working-directory: ${{ github.workspace }}/StickerSmash
-        run: npm run expo:build
+        run: npm run test
