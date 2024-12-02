@@ -38,7 +38,6 @@ jobs:
         run: npm run test
 
       - name: Run Maestro Cloud Test
-        working-directory: ${{ github.workspace }}/StickerSmash
         uses: mobile-dev-inc/action-maestro-cloud@v1.1.0
         with:
           api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
