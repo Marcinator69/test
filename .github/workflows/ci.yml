@@ -20,11 +20,9 @@ jobs:
       - name: Debug current directory
         run: ls -R ${{ github.workspace }}
 
-      - name: Adjust directory if double nested
-        run: |
-          if [ -d "${{ github.workspace }}/test" ]; then
-            mv ${{ github.workspace }}/test/* ${{ github.workspace }}
-          fi
+      - name: Navigate to project directory
+        working-directory: ${{ github.workspace }}/StickerSmash
+        run: pwd
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
