@@ -16,20 +16,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      name: Debug current directory
-        run: ls -R ${{ github.workspace }}
-
-      # Pas werkmap aan als nodig
-      - name: Adjust directory if double nested
-        run: |
-          if [ -d "${{ github.workspace }}/test" ]; then
-            mv ${{ github.workspace }}/test/* ${{ github.workspace }}
-          fi
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20.17.0
+
+      - name: Adjust working directory
+        run: mv /home/runner/work/test
 
       - name: Install dependencies
         run: npm install
