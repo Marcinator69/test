@@ -13,40 +13,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Stap 1: Haal de code op
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debug current directory
-        run: ls -R ${{ github.workspace }}
-
-      - name: Navigate to project directory
-        working-directory: ${{ github.workspace }}/StickerSmash
-        run: pwd
-
+      # Stap 2: Installeer Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20.17.0
 
+      # Stap 3: Installeer Expo CLI en EAS CLI
+      - name: Install Expo CLI and EAS CLI
+        run: |
+          npm install -g expo-cli eas-cli
+
+      # Stap 4: Log in bij Expo met een secret token
+      - name: Login to Expo
+        run: eas login --token ${{ secrets.EXPO_TOKEN }}
+
+      # Stap 5: Installeer projectafhankelijkheden
       - name: Install dependencies
         working-directory: ${{ github.workspace }}/StickerSmash
         run: npm install
 
-      - name: Build APK (for Android)
-        working-directory: ${{ github.workspace }}/StickerSmash
-        run: ./gradlew assembleDebug # Bouw de debug APK, of vervang door assembleRelease voor release build
-
+      # Stap 6: Voer tests uit
       - name: Run Tests
         working-directory: ${{ github.workspace }}/StickerSmash
         run: npm run test
 
+      # Stap 7: Bouw APK met EAS
+      - name: Build APK with EAS
+        working-directory: ${{ github.workspace }}/StickerSmash
+        run: |
+          eas build --platform android --non-interactive
+
+      # Stap 8: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
         uses: mobile-dev-inc/action-maestro-cloud@v1.1.0
         with:
           api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
-          app-file: ${{ github.workspace }}/StickerSmash/app/build/outputs/apk/debug/app-debug.apk # Pas dit pad aan naar de juiste APK
+          app-file: ${{ github.workspace }}/StickerSmash/build/app-debug.apk # Pas dit pad aan als nodig
           flow-file: .maestro/exploreTest.yaml
-          branch: ${{ github.ref }}
-          repoOwner: ${{ github.repository_owner }}
-          repoName: ${{ github.event.repository.name }}
-          pullRequestId: ${{ github.event.pull_request.number }}
+          async: true
