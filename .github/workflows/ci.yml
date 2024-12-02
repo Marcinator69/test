@@ -46,7 +46,7 @@ jobs:
       - name: Build APK with EAS
         working-directory: ${{ github.workspace }}/StickerSmash
         run: |
-          eas build --platform android --non-interactive
+          eas build --platform android --profile development --non-interactive
 
       # Stap 8: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
