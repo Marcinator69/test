@@ -36,3 +36,14 @@ jobs:
       - name: Run Tests
         working-directory: ${{ github.workspace }}/StickerSmash
         run: npm run test
+
+      - name: Run Maestro Cloud Test
+        uses: mobile-dev-inc/action-maestro-cloud@v1.1.0
+        with:
+          api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
+          app-file: ${{ github.workspace }}/app/build/outputs/apk/release/app-release.apk
+          flow-file: .maestro/ExploreTabTest.yaml # Verwijst naar de Maestro Flow
+          branch: ${{ github.ref }}
+          repoOwner: ${{ github.repository_owner }}
+          repoName: ${{ github.event.repository.name }}
+          pullRequestId: ${{ github.event.pull_request.number }}
