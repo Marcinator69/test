@@ -13,15 +13,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Stap 1: Haal de code van je repository op
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Stap 2: Installeer Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20.17.0
+
+      - name: Navigate to project directory
+        run: cd test
 
       # Stap 3: Installeer dependencies
       - name: Install dependencies
@@ -29,4 +30,4 @@ jobs:
 
       # Stap 4: Controleer de build
       - name: Run Expo build
-        run: npm run expo:build # Vervang met je daadwerkelijke build script
+        run: npm run expo:build
