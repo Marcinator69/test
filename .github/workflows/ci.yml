@@ -23,10 +23,6 @@ jobs:
         with:
           node-version: 20.17.0
 
-        # Stap 2: Controleer of jq geïnstalleerd is
-      - name: Controleer of jq geïnstalleerd is
-        run: which jq || echo "jq is niet geïnstalleerd"
-
       # Stap 3: Installeer Expo CLI en EAS CLI
       - name: Install Expo CLI and EAS CLI
         run: |
@@ -52,29 +48,27 @@ jobs:
         run: |
           eas build --platform android --profile production --non-interactive
 
-      # Stap 8: Controleer of jq geïnstalleerd is en zoek naar de voltooide build
-      - name: Controleer jq en haal build URL op
-        id: get_build_url
+      # Stap 8: Log eas build response
+      - name: Log eas build response
         run: |
-          if ! command -v jq &> /dev/null; then
-            echo "jq is not installed. Installing jq..."
-            sudo apt-get install jq
-          else
-            echo "jq is already installed."
-          fi
-          BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r ".\"[0]\".artifacts.buildUrl")
+          eas build:list --limit 1 --status finished --json --non-interactive
+
+      # Stap 9: Test jq
+      - name: Test jq
+        run: |
+          eas build:list --limit 1 --status finished --json --non-interactive | jq .
+
+      # Stap 10: Haal buildUrl op met jq
+      - name: Haal het buildUrl op met jq
+        run: |
+          BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
           echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
 
-      # Stap 9: Download de APK
-      - name: Download APK
-        run: |
-          curl -L ${{ env.BUILD_URL }} -o ${{ github.workspace }}/StickerSmash/build/app-release.apk
-
-      # Stap 10: Run Maestro Cloud Test
+      # Stap 11: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
         uses: mobile-dev-inc/action-maestro-cloud@v1.1.0
         with:
           api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
-          app-file: ${{ github.workspace }}/StickerSmash/build/app-release.apk
+          app-file: ${{ env.BUILD_URL }}
           flow-file: .maestro/exploreTest.yaml
           async: true
