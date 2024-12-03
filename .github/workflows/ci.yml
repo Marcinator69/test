@@ -72,11 +72,26 @@ jobs:
         run: |
           curl -o app-release.apk "$BUILD_URL"
 
-      # Stap 12: Run Maestro Cloud Test
+      # Stap 12: Pak APK in een ZIP-bestand
+      - name: Pak APK in een ZIP-bestand
+        run: |
+          zip app-release.zip app-release.apk
+
+      # Stap 13: Controleer ZIP-bestand
+      - name: Controleer ZIP-bestand
+        run: |
+          if [ -f app-release.zip ]; then
+            echo "ZIP-bestand succesvol aangemaakt."
+          else
+            echo "ZIP-bestand ontbreekt!"
+            exit 1
+          fi
+
+      # Stap 14: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
         uses: mobile-dev-inc/action-maestro-cloud@v1.1.0
         with:
           api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
-          app-file: app-release.apk
+          app-file: app-release.zip
           name: "Explore Test"
           async: true
