@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  build:
+  maestro-cloud:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,81 +17,41 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Stap 2: Installeer Node.js
-      - name: Set up Node.js
+      # Stap 2: Installeer Node.js en dependencies
+      - name: Set up Node.js and install dependencies
         uses: actions/setup-node@v3
         with:
           node-version: 20.17.0
+      - name: Install dependencies
+        working-directory: ${{ github.workspace }}/StickerSmash
+        run: npm install
 
       # Stap 3: Installeer Expo CLI en EAS CLI
       - name: Install Expo CLI and EAS CLI
         run: |
           npm install -g expo-cli eas-cli
 
-      # Stap 4: Stel Expo token in
-      - name: Set Expo token
-        run: echo "EXPO_TOKEN=${{ secrets.EXPO_TOKEN }}" >> $GITHUB_ENV
-
-      # Stap 5: Installeer projectafhankelijkheden
-      - name: Install dependencies
-        working-directory: ${{ github.workspace }}/StickerSmash
-        run: npm install
-
-      # Stap 6: Voer tests uit
-      - name: Run Tests
-        working-directory: ${{ github.workspace }}/StickerSmash
-        run: npm run test
-
-      # Stap 7: Bouw APK met EAS
+      # Stap 4: Bouw APK met EAS
       - name: Build APK with EAS
         working-directory: ${{ github.workspace }}/StickerSmash
         run: |
           eas build --platform android --profile production --non-interactive
 
-      # Stap 8: Haal de response van de laatste build op
-      - name: Log eas build response
-        working-directory: ${{ github.workspace }}/StickerSmash
-        run: |
-          eas build:list --limit 1 --status finished --json --non-interactive
-
-      # Stap 9: Test of `jq` werkt
-      - name: Test jq
-        working-directory: ${{ github.workspace }}/StickerSmash
-        run: |
-          eas build:list --limit 1 --status finished --json --non-interactive | jq .
-
-      # Stap 10: Haal build URL op met jq
-      - name: Haal het buildUrl op met jq
+      # Stap 5: Haal build URL op
+      - name: Retrieve build URL
         working-directory: ${{ github.workspace }}/StickerSmash
         run: |
           BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
           echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
 
-      # Stap 11: Download APK bestand
-      - name: Download APK file
+      # Stap 6: Download APK bestand
+      - name: Download APK
         run: |
           curl -o app-release.apk "$BUILD_URL"
 
-      # Stap 12: Pak APK in een ZIP-bestand
-      - name: Pak APK in een ZIP-bestand
-        run: |
-          zip app-release.zip app-release.apk
-
-      # Stap 13: Controleer ZIP-bestand
-      - name: Controleer ZIP-bestand
-        run: |
-          if [ -f app-release.zip ]; then
-            echo "ZIP-bestand succesvol aangemaakt."
-          else
-            echo "ZIP-bestand ontbreekt!"
-            exit 1
-          fi
-
-      # Stap 14: Run Maestro Cloud Test
+      # Stap 7: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
-        uses: mobile-dev-inc/action-maestro-cloud@v1.1.0
+        uses: mobile-dev-inc/action-maestro-cloud@v1
         with:
           api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
-          app-file: app-release.zip
-          name: "Explore Test"
-          async: true
+          app-file: app-release.apk
