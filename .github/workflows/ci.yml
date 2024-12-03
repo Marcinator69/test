@@ -48,30 +48,35 @@ jobs:
         run: |
           eas build --platform android --profile production --non-interactive
 
-      # Stap 8: Log eas build response
+      # Stap 8: Haal de response van de laatste build op
       - name: Log eas build response
+        working-directory: ${{ github.workspace }}/StickerSmash
         run: |
           eas build:list --limit 1 --status finished --json --non-interactive
-        working-directory: ${{ github.workspace }}/StickerSmash
 
-      # Stap 9: Test jq
+      # Stap 9: Test of `jq` werkt
       - name: Test jq
+        working-directory: ${{ github.workspace }}/StickerSmash
         run: |
           eas build:list --limit 1 --status finished --json --non-interactive | jq .
-        working-directory: ${{ github.workspace }}/StickerSmash
 
-      # Stap 10: Haal het buildUrl op met jq
+      # Stap 10: Haal build URL op met jq
       - name: Haal het buildUrl op met jq
+        working-directory: ${{ github.workspace }}/StickerSmash
         run: |
           BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
           echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
-        working-directory: ${{ github.workspace }}/StickerSmash
 
-      # Stap 11: Run Maestro Cloud Test
+      # Stap 11: Download APK bestand
+      - name: Download APK file
+        run: |
+          curl -o app-release.apk "$BUILD_URL"
+
+      # Stap 12: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
         uses: mobile-dev-inc/action-maestro-cloud@v1.1.0
         with:
           api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
-          app-file: ${{ env.BUILD_URL }}
-          flow-file: .maestro/exploreTest.yaml
+          app-file: app-release.apk
+          name: "Explore Test"
           async: true
