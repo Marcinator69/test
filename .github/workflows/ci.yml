@@ -48,22 +48,19 @@ jobs:
         run: |
           eas build --platform android --profile production --non-interactive
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN:
+            ${{ secrets.EXPO_TOKEN }}
 
-      # Stap 8: Download de APK
+            # Stap 9: Download APK
       - name: Download APK
-        working-directory: ${{ github.workspace }}/StickerSmash
         run: |
-          BUILD_URL=$(eas build:list --limit 1 --status finished --json | jq -r '.[0].artifacts.buildUrl')
-          curl -o app.apk "$BUILD_URL"
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
+          echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
 
-      # Stap 9: Run Maestro Cloud Test
+      # Stap 10: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
         uses: mobile-dev-inc/action-maestro-cloud@v1.1.0
         with:
           api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
-          app-file: ${{ github.workspace }}/StickerSmash/app.apk
-          flow-file: .maestro/exploreTest.yaml # Pas dit pad aan als nodig
+          app-file: ${{ env.BUILD_URL }}
           async: true
