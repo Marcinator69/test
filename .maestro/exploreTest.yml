@@ -1,0 +1,17 @@
+description: Test the "Explore" tab navigation and its content
+
+flow:
+  - launchApp:
+      platform: android # of ios, afhankelijk van je platform
+  - tap:
+      text: Explore # Klik op de "Explore" tab
+  - waitFor:
+      text: Explore # Wacht totdat de Explore tab zichtbaar is en geladen is
+  - verify:
+      text: "Explore" # Controleer of de tekst "Explore" zichtbaar is op de pagina
+  - verify:
+      text: "This app includes example code to help you get started." # Verifieer dat de tekst zichtbaar is
+  - verify:
+      text: "File-based routing" # Verifieer dat de collapsible voor "File-based routing" zichtbaar is
+  - verify:
+      text: "Android, iOS, and web support" # Verifieer dat de collapsible voor "Android, iOS, and web support" zichtbaar is

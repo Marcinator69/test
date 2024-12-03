@@ -13,26 +13,62 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Stap 1: Haal de code op
       - name: Checkout code
         uses: actions/checkout@v3
 
-        # Controleer huidige mapstructuur
-      - name: Debug current directory
-        run: ls -R ${{ github.workspace }}
-
-      - name: Navigate to project directory
-        working-directory: ${{ github.workspace }}/StickerSmash
-        run: pwd
-
+      # Stap 2: Installeer Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 20.17.0
 
+      # Stap 3: Installeer Expo CLI en EAS CLI
+      - name: Install Expo CLI and EAS CLI
+        run: |
+          npm install -g expo-cli eas-cli
+
+      # Stap 4: Stel Expo token in
+      - name: Set Expo token
+        run: echo "EXPO_TOKEN=${{ secrets.EXPO_TOKEN }}" >> $GITHUB_ENV
+
+      # Stap 5: Installeer projectafhankelijkheden
       - name: Install dependencies
         working-directory: ${{ github.workspace }}/StickerSmash
         run: npm install
 
+      # Stap 6: Voer tests uit
       - name: Run Tests
         working-directory: ${{ github.workspace }}/StickerSmash
         run: npm run test
+
+      # Stap 7: Bouw APK met EAS
+      - name: Build APK with EAS
+        working-directory: ${{ github.workspace }}/StickerSmash
+        run: |
+          eas build --platform android --profile production --non-interactive
+
+      # Stap 8: Haal de build URL veilig op
+      - name: Retrieve Build URL
+        working-directory: ${{ github.workspace }}/StickerSmash
+        id: retrieve-url
+        run: |
+          BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
+          if [ -z "$BUILD_URL" ]; then
+            echo "Build URL could not be retrieved. Exiting."
+            exit 1
+          fi
+          echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
+
+      # Stap 9: Download APK naar een specifieke map
+      - name: Download APK to Directory
+        run: |
+          mkdir -p app/build/outputs/apk/debug
+          curl -o app/build/outputs/apk/debug/app-debug.apk "$BUILD_URL"
+
+      # Stap 10: Run Maestro Cloud Test
+      - name: Run Maestro Cloud Test
+        uses: mobile-dev-inc/action-maestro-cloud@v1
+        with:
+          api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
+          app-file: app/build/outputs/apk/debug/app-debug.apk
