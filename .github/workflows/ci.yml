@@ -23,6 +23,10 @@ jobs:
         with:
           node-version: 20.17.0
 
+        # Stap 2: Controleer of jq geïnstalleerd is
+      - name: Controleer of jq geïnstalleerd is
+        run: which jq || echo "jq is niet geïnstalleerd"
+
       # Stap 3: Installeer Expo CLI en EAS CLI
       - name: Install Expo CLI and EAS CLI
         run: |
