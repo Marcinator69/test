@@ -48,10 +48,13 @@ jobs:
         run: |
           eas build --platform android --profile production --non-interactive
         env:
-          EXPO_TOKEN:
-            ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-            # Stap 9: Download APK
+      - name: Check build list output
+        run:
+          eas build:list --limit 1 --status finished --json --non-interactive
+
+          # Stap 9: Download APK
       - name: Download APK
         run: |
           BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r ".[0].artifacts.buildUrl")
