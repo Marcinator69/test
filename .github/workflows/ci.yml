@@ -48,13 +48,25 @@ jobs:
         run: |
           eas build --platform android --profile production --non-interactive
 
-      # Stap 8: Download de APK naar een specifieke map
+      # Stap 8: Haal de build URL veilig op
+      - name: Retrieve Build URL
+        working-directory: ${{ github.workspace }}/StickerSmash
+        id: retrieve-url
+        run: |
+          BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
+          if [ -z "$BUILD_URL" ]; then
+            echo "Build URL could not be retrieved. Exiting."
+            exit 1
+          fi
+          echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
+
+      # Stap 9: Download APK naar een specifieke map
       - name: Download APK to Directory
         run: |
           mkdir -p app/build/outputs/apk/debug
-          curl -o app/build/outputs/apk/debug/app-debug.apk "$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r '.[0].artifacts.buildUrl')"
+          curl -o app/build/outputs/apk/debug/app-debug.apk "$BUILD_URL"
 
-      # Stap 9: Run Maestro Cloud Test
+      # Stap 10: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
         uses: mobile-dev-inc/action-maestro-cloud@v1
         with:
