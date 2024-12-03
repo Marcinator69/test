@@ -48,21 +48,24 @@ jobs:
         run: |
           eas build --platform android --profile production --non-interactive
 
-      # Stap 8: Log eas build response
+     # Stap 8: Log eas build response
       - name: Log eas build response
+        working-directory: ${{ github.workspace }}/StickerSmash
         run: |
-          eas build:list --limit 1 --status finished --json --non-interactive
-
-      # Stap 9: Test jq
+        eas build:list --limit 1 --status finished --json --non-interactive
+  
+     # Stap 9: Test jq
       - name: Test jq
         run: |
           eas build:list --limit 1 --status finished --json --non-interactive | jq .
+        working-directory: ${{ github.workspace }}/StickerSmash
 
-      # Stap 10: Haal buildUrl op met jq
+      # Stap 10: Haal het buildUrl op met jq
       - name: Haal het buildUrl op met jq
         run: |
           BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
           echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
+        working-directory: ${{ github.workspace }}/StickerSmash
 
       # Stap 11: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
