@@ -48,13 +48,13 @@ jobs:
         run: |
           eas build --platform android --profile production --non-interactive
 
-     # Stap 8: Log eas build response
+      # Stap 8: Log eas build response
       - name: Log eas build response
-        working-directory: ${{ github.workspace }}/StickerSmash
         run: |
-        eas build:list --limit 1 --status finished --json --non-interactive
-  
-     # Stap 9: Test jq
+          eas build:list --limit 1 --status finished --json --non-interactive
+        working-directory: ${{ github.workspace }}/StickerSmash
+
+      # Stap 9: Test jq
       - name: Test jq
         run: |
           eas build:list --limit 1 --status finished --json --non-interactive | jq .
