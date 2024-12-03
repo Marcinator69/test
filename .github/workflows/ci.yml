@@ -47,23 +47,30 @@ jobs:
         working-directory: ${{ github.workspace }}/StickerSmash
         run: |
           eas build --platform android --profile production --non-interactive
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Check build list output
-        run:
-          eas build:list --limit 1 --status finished --json --non-interactive
+      # Stap 8: Controleer of jq geïnstalleerd is en zoek naar de voltooide build
+      - name: Controleer jq en haal build URL op
+        id: get_build_url
+        run: |
+          if ! command -v jq &> /dev/null; then
+            echo "jq is not installed. Installing jq..."
+            sudo apt-get install jq
+          else
+            echo "jq is already installed."
+          fi
+          BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r ".\"[0]\".artifacts.buildUrl")
+          echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
 
-          # Stap 9: Download APK
+      # Stap 9: Download de APK
       - name: Download APK
         run: |
-          BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r ".[0].artifacts.buildUrl")
-          echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
+          curl -L ${{ env.BUILD_URL }} -o ${{ github.workspace }}/StickerSmash/build/app-release.apk
 
       # Stap 10: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
         uses: mobile-dev-inc/action-maestro-cloud@v1.1.0
         with:
           api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
-          app-file: ${{ env.BUILD_URL }}
+          app-file: ${{ github.workspace }}/StickerSmash/build/app-release.apk
+          flow-file: .maestro/exploreTest.yaml
           async: true
