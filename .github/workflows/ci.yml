@@ -54,7 +54,7 @@ jobs:
             # Stap 9: Download APK
       - name: Download APK
         run: |
-          BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
+          BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r ".[0].artifacts.buildUrl")
           echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
 
       # Stap 10: Run Maestro Cloud Test
