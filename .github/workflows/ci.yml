@@ -57,26 +57,11 @@ jobs:
             exit 1
           fi
 
-      # Stap 4: Pak de APK in een ZIP-bestand
-      - name: Package APK in ZIP file
-        run: |
-          zip app-release.zip app-release.apk
-
-      # Stap 5: Controleer of ZIP-bestand is aangemaakt
-      - name: Verify ZIP file
-        run: |
-          if [ -f app-release.zip ]; then
-            echo "ZIP file successfully created."
-          else
-            echo "ZIP file missing!"
-            exit 1
-          fi
-
-      # Stap 6: Run Maestro Cloud Test
+      # Stap 4: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
         uses: mobile-dev-inc/action-maestro-cloud@v1.1.0
         with:
           api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
-          app-file: app-release.zip
+          app-file: ${{ github.workspace }}/app-release.apk # Volledige pad naar de APK
           name: "Explore Test"
           async: true
