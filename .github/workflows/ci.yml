@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,52 +23,45 @@ jobs:
         with:
           node-version: 20.17.0
 
-      # Stap 3: Installeer Expo CLI en EAS CLI
-      - name: Install Expo CLI and EAS CLI
-        run: |
-          npm install -g expo-cli eas-cli
-
-      # Stap 4: Stel Expo token in
-      - name: Set Expo token
-        run: echo "EXPO_TOKEN=${{ secrets.EXPO_TOKEN }}" >> $GITHUB_ENV
-
-      # Stap 5: Installeer projectafhankelijkheden
+      # Stap 3: Installeer projectafhankelijkheden
       - name: Install dependencies
         working-directory: ${{ github.workspace }}/StickerSmash
         run: npm install
 
-      # Stap 6: Voer tests uit
+      # Stap 4: Voer tests uit
       - name: Run Tests
         working-directory: ${{ github.workspace }}/StickerSmash
         run: npm run test
 
-      # Stap 7: Bouw APK met EAS
-      - name: Build APK with EAS
-        working-directory: ${{ github.workspace }}/StickerSmash
-        run: |
-          eas build --platform android --profile production --non-interactive
+  maestro-cloud:
+    runs-on: ubuntu-latest
+    needs: build-and-test
 
-      # Stap 8: Haal de build URL veilig op
-      - name: Retrieve Build URL
-        working-directory: ${{ github.workspace }}/StickerSmash
-        id: retrieve-url
+    steps:
+      # Stap 1: Haal de code op
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Stap 2: Download de APK via de opgeslagen URL
+      - name: Download APK file
         run: |
-          BUILD_URL=$(eas build:list --limit 1 --status finished --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
-          if [ -z "$BUILD_URL" ]; then
-            echo "Build URL could not be retrieved. Exiting."
+          curl -o app-release.apk "${{ secrets.APK_URL }}"
+
+      # Stap 3: Controleer of APK is gedownload
+      - name: Verify APK
+        run: |
+          if [ -f app-release.apk ]; then
+            echo "APK file successfully downloaded."
+          else
+            echo "APK file missing!"
             exit 1
           fi
-          echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
 
-      # Stap 9: Download APK naar een specifieke map
-      - name: Download APK to Directory
-        run: |
-          mkdir -p app/build/outputs/apk/debug
-          curl -o app/build/outputs/apk/debug/app-debug.apk "$BUILD_URL"
-
-      # Stap 10: Run Maestro Cloud Test
+      # Stap 4: Run Maestro Cloud Test
       - name: Run Maestro Cloud Test
-        uses: mobile-dev-inc/action-maestro-cloud@v1
+        uses: mobile-dev-inc/action-maestro-cloud@v1.1.0
         with:
           api-key: ${{ secrets.MAESTRO_CLOUD_API_KEY }}
-          app-file: app/build/outputs/apk/debug/app-debug.apk
+          app-file: app-release.apk
+          name: "Explore Test"
+          async: true
